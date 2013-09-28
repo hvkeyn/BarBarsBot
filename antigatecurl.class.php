@@ -31,6 +31,7 @@ function recognize(
             $apikey,
             $is_verbose = true,
             $domain="antigate.com",
+			$flog,
             $rtimeout = 5,
             $mtimeout = 120,
             $is_phrase = 0,
@@ -43,7 +44,7 @@ function recognize(
 {
 	if (!file_exists($filename))
 	{
-		if ($is_verbose) echo "file $filename not found\n";
+		if ($is_verbose) fputs($flog, "file $filename not found\n");
 		return false;
 	}
     $postdata = array(
@@ -66,41 +67,41 @@ function recognize(
     $result = curl_exec($ch);
     if (curl_errno($ch)) 
     {
-    	if ($is_verbose) echo "CURL returned error: ".curl_error($ch)."\n";
+    	if ($is_verbose) fputs($flog, "CURL returned error: ".curl_error($ch)."\n");
         return false;
     }
     curl_close($ch);
     if (strpos($result, "ERROR")!==false)
     {
-    	if ($is_verbose) echo "server returned error: $result\n";
+    	if ($is_verbose) fputs($flog, "server returned error: $result\n");
         return $result;
     }
     else
     {
         $ex = explode("|", $result);
         $captcha_id = $ex[1];
-    	if ($is_verbose) echo "captcha sent, got captcha ID $captcha_id\n";
+    	if ($is_verbose) fputs($flog, "captcha sent, got captcha ID $captcha_id\n");
         $waittime = 0;
-        if ($is_verbose) echo "waiting for $rtimeout seconds\n";
+        if ($is_verbose) fputs($flog, "waiting for $rtimeout seconds\n");
         sleep($rtimeout);
         while(true)
         {
             $result = file_get_contents("http://$domain/res.php?key=".$apikey.'&action=get&id='.$captcha_id);
             if (strpos($result, 'ERROR')!==false)
             {
-            	if ($is_verbose) echo "server returned error: $result\n";
+            	if ($is_verbose) fputs($flog, "server returned error: $result\n");
                 return false;
             }
             if ($result=="CAPCHA_NOT_READY")
             {
-            	if ($is_verbose) echo "captcha is not ready yet\n";
+            	if ($is_verbose) fputs($flog, "captcha is not ready yet\n");
             	$waittime += $rtimeout;
             	if ($waittime>$mtimeout) 
             	{
-            		if ($is_verbose) echo "timelimit ($mtimeout) hit\n";
+            		if ($is_verbose) fputs($flog, "timelimit ($mtimeout) hit\n");
             		break;
             	}
-        		if ($is_verbose) echo "waiting for $rtimeout seconds\n";
+        		if ($is_verbose) fputs($flog, "waiting for $rtimeout seconds\n");
             	sleep($rtimeout);
             }
             else

@@ -3,7 +3,6 @@ ini_set('allow_url_fopen',1);
 require_once("config.php"); // Конфиг
 include_once("lib.php"); // библиотека функций
 include_once("simple_html_dom.php"); // регулярки
-include_once("antigatecurl.class.php"); // антикапча
 
 function repairMain($Referer,$userAgent,$flog){
 // Переходим к герою
@@ -116,7 +115,6 @@ $url = "http://barbars.ru/user";
 		$zapros = get_contents($url, "", $Referer, $userAgent, true);
 		$Referer = $url;
 		$url = $zapros;
-		fputs($flog, "\n\n$url \n $Referer\n $zapros\n\n");
 		$zapros = get_contents($url, "", $Referer, $userAgent, false);
 
 		// Создаем DOM из URL

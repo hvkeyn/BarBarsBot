@@ -1,8 +1,8 @@
 <?php
 
 // Ошибки
-ini_set('display_errors', 1);
-ini_set('allow_url_fopen',1); // разрешаем указывать пустые ссылки в парсинге
+ini_set('display_errors', '1');
+ini_set('allow_url_fopen','1'); // разрешаем указывать пустые ссылки в парсинге
 error_reporting(E_ALL);
 //error_reporting(-1);
 
@@ -15,6 +15,8 @@ include_once("simple_html_dom.php"); // регулярки
 include_once("antigatecurl.class.php"); // антикапча
 // Игровые библиотеки скрипта
 include_once("rack.php"); // работа с рюкзаком
+include_once("well.php"); // колодец удачи
+include_once("capcha.php"); // Антикапча
 
 $html = new simple_html_dom(); // создаем объект
 
@@ -64,13 +66,20 @@ $Referer = get_contents($url, $PostFields, $Referer, $userAgent, true);
 
 fputs($flog, "Вошли в аккаунт!\n");
 
-// начинаем с главной страницы(есил вдург уже залогинены)
+// начинаем с главной страницы(есил вдруг уже залогинены)
 $url = "http://barbars.ru";
 sleep(rand(1,2));
+
 // получаем главную страницу операций героя
 $zapros = get_contents($url, "", $Referer, $userAgent, false);
 
 $Referer = $url;
+
+		// C - Антикапча. Проверяем и вводим если нашли.
+		$Referer = anticapcha($Referer,$userAgent,$flog,$gkey,$capcha_server);
+		// G - Проверяем подарок в колодце удачи
+		$Referer = wellGift($Referer,$userAgent,$flog);
+		
 $url = "http://barbars.ru/game/towers";
 // Идем в БАШНИ
 $zapros = get_contents($url, "", $Referer, $userAgent, false);
@@ -99,8 +108,7 @@ $zapros = get_contents($url, "", $Referer, $userAgent, false);
 sleep(rand(1,3));
 // 0 - начинаем сканирование до главного цикла
 $zapros = get_contents($url, "", $Referer, $userAgent, false);
-
-
+		
 // Супербольшой цикл обработки игровой логики ---> !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 //(в данный момент - бой\лечение, подбор\разбор\починка вещей, заклинания и отдых)
 while($all_step < $step_main && $EXIT == 0)
@@ -127,7 +135,7 @@ sleep(rand(40,60));
 		$url = "http://barbars.ru/".$url;
 		$url = str_replace("&amp;", "&", $url);
 		$name = $e->plaintext;
-	    fputs($flog, "Продолжаем бой в локации <<$name>>!\n");
+	    fputs($flog, "Продолжаем бой в локации <<".trim($name).">>!\n");
 		
 		// очищаем буффер
 		EraseMemory($html);
@@ -226,7 +234,7 @@ $rest = 0;
 		$url = "http://barbars.ru/".$url;
 		$url = str_replace("&amp;", "&", $url);
 		$name = $e->plaintext;
-	    fputs($flog, "Продолжаем бой в локации <<$name>> $url!\n");
+	    fputs($flog, "Проблемы с получением данных. Починили. Продолжаем работу!\n");
 		
 		// очищаем буффер
 		EraseMemory($html);
@@ -377,12 +385,18 @@ $rest = 0;
 	
 		$url = str_replace("&amp;", "&", $url);
 		
-		// 1 - подгружаем страницу
-		$zapros = get_contents($url, "", $Referer, $userAgent, false);
-
-
 		// очищаем буффер
 		EraseMemory($html);
+		
+		// 1 - подгружаем страницу
+		$zapros = get_contents($url, "", $Referer, $userAgent, false);
+		
+// Ошибка пустого ответа - иногда выбрасывает пустую страницу
+if(!$zapros){ 
+$url = "http://barbars.ru/game/towers";
+$Referer = "http://barbars.ru";
+$zapros = get_contents($url, "", $Referer, $userAgent, false);
+}
 
 if($all_step >= $step_main) $EXIT = 1;
 $all_step++;
