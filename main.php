@@ -14,8 +14,9 @@ include_once("lib.php"); // библиотека функций
 include_once("simple_html_dom.php"); // регулярки
 include_once("antigatecurl.class.php"); // антикапча
 // Игровые библиотеки скрипта
-include_once("rack.php"); // работа с рюкзаком
-include_once("well.php"); // колодец удачи
+include_once("rack.php"); // Работа с рюкзаком
+include_once("well.php"); // Колодец удачи
+include_once("dungeons.php"); // Драконы и пещеры
 include_once("capcha.php"); // Антикапча
 
 $html = new simple_html_dom(); // создаем объект
@@ -36,6 +37,9 @@ $all_step = 0;
 $EXIT = 0;
 $rest = 0; // Режим отдыха в столице?
 $urls = Array();
+
+// Удаляем stop.txt
+if(file_exists("stop.txt")) unlink("stop.txt");
 
 // Логинимся на сервер...
 fputs($flog, "Логинимся на сервер игры barbars.ru...\n");
@@ -79,6 +83,7 @@ $Referer = $url;
 		$Referer = anticapcha($Referer,$userAgent,$flog,$gkey,$capcha_server);
 		// G - Проверяем подарок в колодце удачи
 		$Referer = wellGift($Referer,$userAgent,$flog);
+
 		
 $url = "http://barbars.ru/game/towers";
 // Идем в БАШНИ
@@ -110,7 +115,8 @@ sleep(rand(1,3));
 $zapros = get_contents($url, "", $Referer, $userAgent, false);
 		
 // Супербольшой цикл обработки игровой логики ---> !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-//(в данный момент - бой\лечение, подбор\разбор\починка вещей, заклинания и отдых)
+//(в данный момент - бой\лечение, подбор\разбор\починка вещей, заклинания,
+// ввод капчи, получение подарка из колодца, битвы в пещерах с Боссами и отдых)
 while($all_step < $step_main && $EXIT == 0)
 {
 // Закончились силы или низкий уровень здоровья? Отдыхаем!
@@ -155,6 +161,11 @@ $rest = 0;
 
 		// R - Проверяем, рюкзак заполнен?
 		if(strpos($zapros, "bag_full.gif") !== false){
+		
+		// P - Проверяем, есть-ли у персонажа пррофессия? Если есть - повышаем!
+		// !!! Поддерживает только аниквара !!! 
+		//$Referer = CreateStones($Referer,$userAgent,$flog);	
+		
 		// Для возвращения в бой
 		  $Referer = "http://barbars.ru/user/rack";
 		// очищаем буффер
@@ -391,6 +402,19 @@ $rest = 0;
 		// 1 - подгружаем страницу
 		$zapros = get_contents($url, "", $Referer, $userAgent, false);
 		
+if($all_step==1000 || $all_step==2000 || $all_step==3000 || $all_step==4000 || $all_step==5000 || $all_step==6000 || $all_step==7000 || $all_step==8000 || $all_step==9000 || $all_step==10000)
+{
+		// C - Антикапча. Проверяем и вводим если нашли.
+		$Referer = anticapcha($Referer,$userAgent,$flog,$gkey,$capcha_server);
+		// G - Проверяем подарок в колодце удачи
+		$Referer = wellGift($Referer,$userAgent,$flog);
+		// D - Битва с Боссами в пещерах и гротах
+		$Referer = Dungeons($Referer,$userAgent,$flog);
+		$url = "http://barbars.ru/game/towers";
+		// Идем в БАШНИ
+		$zapros = get_contents($url, "", $Referer, $userAgent, false);
+}
+		
 // Ошибка пустого ответа - иногда выбрасывает пустую страницу
 if(!$zapros){ 
 $url = "http://barbars.ru/game/towers";
@@ -399,6 +423,9 @@ $zapros = get_contents($url, "", $Referer, $userAgent, false);
 }
 
 if($all_step >= $step_main) $EXIT = 1;
+// ЭКСТРЕНЫЙ ВЫХОД по stop
+if(file_exists("stop.txt")) $EXIT = 1;
+
 $all_step++;
 sleep(rand(2,6));
 }
