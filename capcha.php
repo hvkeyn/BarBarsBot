@@ -8,6 +8,7 @@ include_once("lib.php"); // библиотека функций
 include_once("simple_html_dom.php"); // регулярки
 include_once("antigatecurl.class.php"); // антикапча
 $EXIT_a = 0; // Ошибок нет
+$ustal = 0; // Устали биться в башнях - делаем перерыв...
 
 // Переходим к герою
 $url = "http://barbars.ru/user";
@@ -19,10 +20,15 @@ $url = "http://barbars.ru/user";
 		
 				$Referer = $url;
 		$url = "";
+		
 		// Ищем ссылку с текстом "Защита от роботов"
 		foreach($html->find('a') as $muser){
-		if(strpos($muser->innertext, "Защита от роботов") !== false){
+		if(strpos($muser->innertext, "Защита от роботов") !== false || strpos($muser->innertext, "Защита от ботов") !== false){
 		$url = "http://barbars.ru/".$muser->href;	
+		}
+		// Ищем инф-цию по усталости
+		if(strpos($muser->innertext, "Усталость") !== false){
+		$ustal = 1;
 		}
 		}
 		// очищаем буффер
@@ -121,13 +127,13 @@ $url = "http://barbars.ru/user";
 
 		// !!! Проверяем текст на наличие нужных нам элементов !!!
 				$Referer = $url;
-
+//fputs($flog, "ОТВЕТ_ОТ_СЕРВЕРА:\n$zapros\n");	
 	    fputs($flog, "Ввели капчу! Продолжаем работу.\n");	
 		}
 		// очищаем буффер
 		EraseMemory($html);	
-		}
+		} else fputs($flog, "Капчу не обнаружили!\n");	
 	
-		return $Referer;
+		return array($Referer, $ustal); 
 }
 ?>

@@ -71,9 +71,12 @@ if (!$url['path'])
  
 $url['path'] = $last_url['path'];
  
-$new_url = $url['scheme'] . '://' . $url['host'] . $url['path']; //. ($url['query']?'?'.$url['query']:'');
+$new_url = $url['scheme'] . '://' . $url['host'] . $url['path'];// . ($url['query']?'?'.$url['query']:'');
 
 //echo "URL:".$new_url."<br>";
+
+$new_url = str_replace("&amp;", "&", $new_url);
+$new_url = str_replace("%3a", ":", $new_url);
 //curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
  
 //curl_setopt($ch, CURLOPT_URL, $new_url);
@@ -243,6 +246,54 @@ file_put_contents("proxy.txt",$full_file); //записываем все ост�
     } //End.Repeat = 0
     return $result;	
 }
+
+function fast_srch($theArray, $searchElement)
+{
+    if (!is_array($searchElement))
+    {
+        $e = array($searchElement);
+    } else {
+        $e = $searchElement;
+    }
+ 
+    $a1 = array_merge($theArray, $e);
+    $a2 = array_diff($a1, $theArray);
+ 
+    if (count($a2))
+    {
+        return false;
+    } else {
+        return true;
+    }
+}
+
+function replace_spec($text_spec)
+{
+		// Блок замены спец-символов
+		$text_spec = str_replace("&nbsp;", " ", $text_spec);	
+		$text_spec = str_replace("&quot;", "'", $text_spec);
+		$text_spec = str_replace("&amp;", "&", $text_spec); 
+		$text_spec = str_replace("&lt;", "<", $text_spec); 
+		$text_spec = str_replace("&gt;", ">", $text_spec); 
+		$text_spec = str_replace("&raquo;", "»", $text_spec);
+		$text_spec = str_replace("&laquo;", "«", $text_spec);	
+		
+		$text_spec  = strip_tags($text_spec);
+		$text_spec  = trim($text_spec);
+		
+		return $text_spec;
+}
+
+// Бореся с заменой русских букв на английские в словах
+function no_translit($str)
+{
+    $tr = array(
+    "A"=>"А","O"=>"О","E"=>"Е","P"=>"Р","C"=>"С","Y"=>"У","K"=>"К","B"=>"В","X"=>"Х","M"=>"М","T"=>"Т","H"=>"Н"
+	,"a"=>"а","o"=>"о","e"=>"е","p"=>"р","c"=>"с","y"=>"у","k"=>"к","x"=>"х","m"=>"м","t"=>"т","h"=>"н"		
+    );
+    return strtr($str,$tr);
+}
+
 
 function get_balance_antigate($gkey,$capcha_server)
 {
