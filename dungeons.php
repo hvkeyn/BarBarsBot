@@ -1,9 +1,18 @@
 <?php
 // Битва в Пещерах с боссами
-function Dungeons($Referer,$userAgent,$flog){
+function Dungeons($UseDungeonsBottle,$Referer,$userAgent,$flog){
 require_once("config.php"); // Конфиг
 include_once("lib.php"); // библиотека функций
 include_once("simple_html_dom.php"); // регулярки
+
+// Для лога - процесс боя
+$fLogDungeon = array(
+"Пьем Лекарство!\n", 
+"Активируем Абилку...\n", 
+"Лечим союзника!\n", 
+"Добиваем врага!(Жгем энергию!)\n",
+"Бьем противника(Лечим союзников)...\n",
+"Мы умерли:( Воскрешаем Героя...\n");
 
 $dMenuLinks = array(
 "http://barbars.ru/game/guardian", 
@@ -49,10 +58,10 @@ $url = "http://barbars.ru";
 				$Referer = $url;
 
 		// Проверяем, были мы тут или нет?
-		if(strpos($html->find('h1',0)->innertext, "Пустой грот") !== false || strpos($html->find('h1',0)->innertext, "Пустая пещера") !== false){
-	    fputs($flog, "$int_i грот пуст...\n");	
+		if(strpos($html->find('h1',0)->innertext, "Пустой грот") !== false || strpos($html->find('h1',0)->innertext, "Пустая пещера") !== false || strpos($html->find('h1',0)->innertext, "Вход закрыт") !== false){
+	    fputs($flog, "$int_i грот пуст или вход закрыт...\n");	
 		$int_i++;	
-		continue;		
+		//continue;		
 		} else {		
 		// ЦИКЛ ПОДГОТОВКИ К БОЮ
 		fputs($flog, "Встаем в очередь на босса...\n");
@@ -65,7 +74,6 @@ $url = "http://barbars.ru";
 		}
 		$url = "http://barbars.ru/".$url;
 		$url = str_replace("&amp;", "&", $url);
-		}
 		}
 		}
 		
@@ -197,10 +205,10 @@ $url = "http://barbars.ru";
 		// --------------!!!!! Алгоритм боя !!!!!----------------
 		// 3 - Ищем адреса страниц действий
 		foreach($html->find('a[class=flhdr]') as $links){	
-
-		if($life < 400 || $energy < 5){
+		
+		if(($life < 400 || $energy < 5) && $UseDungeonsBottle == true){
 		// 3.0 - Проверяем наличие готовности бутылочки
-		if(strpos($links->innertext, "Пить") !== false){
+		if((strpos($links->innertext, "Пить") !== false) && (strpos($links->innertext, "сек.") !== true)){
 		$urlt = $links->href;
 		while($urlt[0] != "?") {
 		$urlt = substr($urlt,1);
@@ -235,7 +243,7 @@ $url = "http://barbars.ru";
 		$urlt = substr($urlt,1);
 		}
 		$urls[3] = "http://barbars.ru/".$urlt;//.substr($links->href,2);	
-		if(strpos($links->plaintext, "<span>0</span>") !== false) $urls[3] = "";	
+		if(strpos($links->plaintext, "<span>0</span>") !== false) $urls[3] = "";		
 		}
 		
 		// 3.4 - Ищем врага	если ничего не готово...
@@ -262,16 +270,18 @@ $url = "http://barbars.ru";
 		for($u=0;$u<6;$u++){
 		if($urls[5] == "" && $urls[$u] != ""){ 
 		   $url = $urls[$u];
-		   fputs($flog, $fLogStr[$u]);	
+		   fputs($flog, $fLogDungeon[$u]);	
 		   break 1;
 		} else if(strpos($html->find('h1',0)->innertext, "Пустой грот") !== false || strpos($html->find('h1',0)->innertext, "Пустая пещера") !== false){
 		// Оп-па, босс повержен! (1 вариант)
 		$isMainR = 1;
+		$int_i++;
 	    fputs($flog, "Закончили бой с Боссом!\n");	
 	    break 1;		
 		} else if($urls[5] != ""){
 		// Оп-па, босс повержен! (2 вариант)
 		$isMainR = 1;
+		$int_i++;
 	    fputs($flog, "Закончили бой с Боссом!\n");	
 	    break 1;		
 		}
@@ -287,7 +297,7 @@ $url = "http://barbars.ru";
 		
 		// ЭКСТРЕНЫЙ ВЫХОД по stop
 		if(file_exists("stop.txt")){ 
-	    fputs($flog, "Аварийное завершение работы! Локация:Пещеры и драконы\n");
+	    fputs($flog, "Аварийное завершение работы! Локация: Пещеры и драконы\n");
 		Die();
 		}
 
@@ -296,6 +306,8 @@ $url = "http://barbars.ru";
 		}
 		
 		}
+		
+		} // End.Очеред моснтров
 		
 		}	
 

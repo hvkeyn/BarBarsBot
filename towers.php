@@ -1,9 +1,6 @@
 <?php
 // Битва в Башнях
-function Towers($step_this=500,$Referer,$userAgent,$flog){
-header('Content-type: text/html; charset=utf-8');
-setlocale(LC_ALL, 'ru_RU.utf8');
-date_default_timezone_set('Europe/Moscow');
+function Towers($step_this=500,$UseTowersBottle,$Referer,$userAgent,$flog){
 require_once("config.php"); // Конфиг
 include_once("lib.php"); // библиотека функций
 include_once("simple_html_dom.php"); // регулярки
@@ -17,7 +14,8 @@ $fLogStr = array(
 "Атакуем башню!(Жгем энергию у врага!)\n", 
 "Добиваем врага!(Лечим союзника!)\n",
 "Ищем противника(Союзника для лечения)...\n",
-"В локации нет противников! Обновляем...\n");
+"В локации нет противников! Обновляем...\n",
+"Пьем лекарство...\n");
 
 // КАРТЫ БАШЕНЬ
 $TowerMainArray = Array(
@@ -249,9 +247,9 @@ fputs($flog, "Убили всех врагов! Идем дальше...\n");
 		// Ищем категорию КАРТ БАШЕНЬ
 		for($b=0;$b<count($TowerMainArray);$b++){
 		// Применяем массив
-	    fputs($flog, "Сравниваем ".no_translit($TowersArrayPath)." с ".$TowerMainArray[$b]."!\n");
+	    //fputs($flog, "Сравниваем ".no_translit($TowersArrayPath)." с ".$TowerMainArray[$b]."!\n");
 		if(strpos(no_translit($TowersArrayPath),$TowerMainArray[$b]) > -1){
-	    fputs($flog, "НАШЛИ СОВПАДЕНИЕ $b!\n");	
+	    //fputs($flog, "НАШЛИ СОВПАДЕНИЕ $b!\n");	
 		$TowerArray = Array();
 		switch ($b) {
 		case 0: $TowerArray = Array("Курган");
@@ -278,7 +276,7 @@ fputs($flog, "Убили всех врагов! Идем дальше...\n");
 		// Ищем ссылку по базе Башень
 		foreach($html->find('a[class=flhdr]') as $ptower){
 		for($b=0;$b<count($TowerArray);$b++){
-	    fputs($flog, "Сравниваем <<".no_translit(trim($ptower->plaintext)).">> с <<".$TowerArray[$b].">>!\n");
+	    //fputs($flog, "Сравниваем <<".no_translit(trim($ptower->plaintext)).">> с <<".$TowerArray[$b].">>!\n");
 		if(strpos(no_translit(trim($ptower->plaintext)), $TowerArray[$b]) !== false){
         $url = $ptower->href;
 		while($url[0] != "?") {
@@ -491,6 +489,18 @@ $ClearLoc = 0;
 		foreach($html->find('a[class=flhdr]') as $links){
 	
 		if($life < 400 || $energy < 100 || $step_towers >= ($step_this-1)){
+		// 3.0.0 - Проверяем, можем ли мы лечиться?Лечимся - если можем!		
+		if($UseTowersBottle == true){
+		if((strpos($links->innertext, "Пить") !== false) && (strpos($links->innertext, "сек.") !== true)){
+		$urlt = $links->href;
+		while($urlt[0] != "?") {
+		$urlt = substr($urlt,1);
+		}
+		$urls[5] = "http://barbars.ru/".$urlt;//.substr($links->href,2);
+		$urls[0] = "";
+		break 1;		
+		}}
+		
 		// 3.0 - Ссылка на БАЗУ если большой дамаг или устал
 		if(strpos($links->innertext, "Карaкорум, стoлицa Юга") !== false || strpos($links->innertext, "Мидгард, столица Севера") !== false){
 		$urlt = $links->href;
@@ -545,16 +555,14 @@ $ClearLoc = 0;
 		}
 
 		// 4 - Определяем последовательность боя. Важность команд по "ценности"
-		for($u=1;$u<5;$u++){
+		for($u=1;$u<6;$u++){
 		if($urls[0] == "" && $urls[$u] != ""){ 
 		   $url = $urls[$u];
-		   fputs($flog, $fLogStr[$u]);
-		  // $ClearLoc = 0;		   
+		   fputs($flog, $fLogStr[$u]);	   
 		   break 1;
 		} else if($urls[0] != ""){
 		   $url = $urls[0];
-		   fputs($flog, $fLogStr[0]);
-		   //$ClearLoc = 0;		   
+		   fputs($flog, $fLogStr[0]);	   
 		   break 1;		
 		}
 		}

@@ -4,7 +4,7 @@ require_once("config.php"); // Конфиг
 
 //follow on location problems workaround
  
-function curl_redir_exec($ch)
+function curl_redir_exec($ch,$rez)
 {
  
 static $curl_loops = 0;
@@ -71,7 +71,9 @@ if (!$url['path'])
  
 $url['path'] = $last_url['path'];
  
-$new_url = $url['scheme'] . '://' . $url['host'] . $url['path'];// . ($url['query']?'?'.$url['query']:'');
+if($rez == 111){
+$new_url = $url['scheme'] . '://' . $url['host'] . $url['path'] . ($url['query']?'?'.$url['query']:'');
+} else { $new_url = $url['scheme'] . '://' . $url['host'] . $url['path']; }// . ($url['query']?'?'.$url['query']:''); 
 
 //echo "URL:".$new_url."<br>";
 
@@ -222,10 +224,11 @@ file_put_contents("proxy.txt",$full_file); //записываем все ост�
     } 
 
 	if($followlocation !== true){
-    $result = curl_exec($ch); 
+	if($followlocation == 111) $result = curl_redir_exec($ch,111);
+    else $result = curl_exec($ch); 
 	} else {
 	if($emul_curl !== true) $result = curl_exec($ch); 
-	else $result = curl_redir_exec($ch);
+	else $result = curl_redir_exec($ch,0);
 	}
 	
     if (curl_errno($ch)!==0)  

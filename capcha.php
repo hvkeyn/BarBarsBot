@@ -75,7 +75,7 @@ $url = "http://barbars.ru/user";
 				{
 				$tantigate =0 ;
 
-				while (($antigate_code == "ERROR_NO_SLOT_AVAILABLE") && ($tantigate!=50)){
+				while (($antigate_code == "ERROR_NO_SLOT_AVAILABLE") && ($tantigate!=100)){
 				fputs($flog, "Попытка: $tantigate . Сервис antigate занят... Переотправляем капчу...\n");
 				sleep(3);
 				$antigate_code = recognize("./captcha.png",$gkey,true, $capcha_server);

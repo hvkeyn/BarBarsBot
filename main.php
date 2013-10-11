@@ -15,12 +15,13 @@ ignore_user_abort(1);   // Игнорировать обрыв связи с б�
 require_once("config.php"); // Конфиг
 include_once("lib.php"); // библиотека функций
 include_once("simple_html_dom.php"); // регулярки
-include_once("antigatecurl.class.php"); // антикапча
 // Игровые библиотеки скрипта
 include_once("rack.php"); // Работа с рюкзаком
 include_once("well.php"); // Колодец удачи
 include_once("towers.php"); // Бой в башнях
 include_once("dungeons.php"); // Драконы и пещеры
+include_once("arena.php"); // Арена
+include_once("survival.php"); // Выживание
 include_once("capcha.php"); // Антикапча
 
 $html = new simple_html_dom(); // создаем объект
@@ -46,7 +47,7 @@ $url = "http://barbars.ru/login";
 $PostFields = "loginForm_hf_0=&login=".$game_login."&password=".$game_password."&%3Asubmit=%D0%92%D0%BE%D0%B9%D1%82%D0%B8";
 $Referer = "http://barbars.ru/";
 
-$zapros = get_contents($url, "", $Referer, $userAgent, false);
+$zapros = get_contents($url, $PostFields, $Referer, $userAgent, false);
 
 		// Создаем DOM из URL
 		$html = str_get_html($zapros);
@@ -84,10 +85,31 @@ while($all_step < $step_main && $EXIT == 0)
 list($Referer, $ustal) = anticapcha($Referer,$userAgent,$flog,$gkey,$capcha_server);
 sleep(rand(2,10));	
 
+// Данные главной страницы
+$url = "http://barbars.ru";
+$zapros = get_contents($url, "", $Referer, $userAgent, false);
+$html = str_get_html($zapros);
+$Referer = $url;
+
+foreach($html->find('a') as $links){
+if(strpos($links->innertext, "Арена") !== false){
+// очищаем буффер
+EraseMemory($html);
+$Referer = Arena($colArenaCikl,$UseArenaBottle,$Referer,$userAgent,$flog,$gkey,$capcha_server);
+sleep(rand(2,10));
+}}
+
+// очищаем буффер
+EraseMemory($html);
+
+// C - Антикапча. Проверяем и вводим если нашли. Также получаем параметр "усталость"
+//list($Referer, $ustal) = anticapcha($Referer,$userAgent,$flog,$gkey,$capcha_server);
+//sleep(rand(2,10));	
+
 if($pUstal == 0) $ustal = 0; // Игнорируем проверку усталости если в конфиге 0
 if($ustal == 0){
 // T - Битва в башнях - основной цикл накрутки опыта
-$Referer = Towers($step_tower, $Referer, $userAgent, $flog);
+$Referer = Towers($step_tower, $UseTowersBottle, $Referer, $userAgent, $flog);
 } else fputs($flog, "Герой устал! Делаем перерыв до снятия усталости...\n");
 sleep(rand(2,10));
 
@@ -95,12 +117,46 @@ sleep(rand(2,10));
 list($Referer, $ustal) = anticapcha($Referer,$userAgent,$flog,$gkey,$capcha_server);
 sleep(rand(2,10));	
 
+// Данные главной страницы
+$url = "http://barbars.ru";
+$zapros = get_contents($url, "", $Referer, $userAgent, false);
+$html = str_get_html($zapros);
+$Referer = $url;
+
+foreach($html->find('a') as $links){
+if(strpos($links->innertext, "Выживание") !== false){
+// очищаем буффер
+EraseMemory($html);
+$Referer = Survival($colSurvivalCikl,$UseSurvivalBottle,$Referer,$userAgent,$flog,$gkey,$capcha_server);
+sleep(rand(2,10));
+}}
+
+// очищаем буффер
+EraseMemory($html);
+
 // G - Проверяем подарок в колодце удачи
 $Referer = wellGift($Referer,$userAgent,$flog);
 sleep(rand(2,10));
+// C - Антикапча. Проверяем и вводим если нашли.
+list($Referer, $ustal) = anticapcha($Referer,$userAgent,$flog,$gkey,$capcha_server);
+sleep(rand(2,10));	
+
+// Данные главной страницы
+$url = "http://barbars.ru";
+$zapros = get_contents($url, "", $Referer, $userAgent, false);
+$html = str_get_html($zapros);
+$Referer = $url;
 		
 // D - Битва с Боссами в пещерах и гротах
-$Referer = Dungeons($Referer,$userAgent,$flog);
+foreach($html->find('a') as $links){
+if(strpos($links->innertext, "Пещеры и драконы") !== false){
+// очищаем буффер
+EraseMemory($html);
+$Referer = Dungeons($UseDungeonsBottle,$Referer,$userAgent,$flog);
+}}
+
+// очищаем буффер
+EraseMemory($html);
 
 if($all_step >= $step_main) $EXIT = 1;
 // ЭКСТРЕНЫЙ ВЫХОД по stop
