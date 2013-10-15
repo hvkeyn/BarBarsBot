@@ -93,7 +93,6 @@ $url = "http://barbars.ru";
 		$cnt=0;
 		// Флаги выхода из циклов
 		$isWaitR=0;
-		$isFightR=0;
 		$isMainR=0;
 		// ЦИКЛ ОЖИДАНИЯ<->БОЙ
 		while($isMainR==0){
@@ -108,6 +107,7 @@ $url = "http://barbars.ru";
 		}
 		$url = "http://barbars.ru/".$url;
 		$url = str_replace("&amp;", "&", $url);
+		fputs($flog, "$cnt - Ждем...\n");
 		$cnt++;
 		}
 		if(strpos($dmenu->innertext, "Бить") !== false){
@@ -118,8 +118,14 @@ $url = "http://barbars.ru";
 		$url = "http://barbars.ru/".$url;
 		$url = str_replace("&amp;", "&", $url);
 		$isWaitR=1;
-		$isFightR=1;
+		$isMainR=0;
 		fputs($flog, "Бой с Боссом начался!\n");
+		break 1;
+		}
+		// ЭКСТРЕНЫЙ ВЫХОД по stop
+		if(file_exists("stop.txt")){ 
+	    fputs($flog, "Аварийное завершение работы! Локация: Пещеры и Драконы [Выполнение команды КЛАНА прервано]\n");
+		Die();
 		}
 		} else {
 		if(strpos($dmenu->innertext, "Покинуть очередь") !== false){
@@ -129,9 +135,10 @@ $url = "http://barbars.ru";
 		}
 		$url = "http://barbars.ru/".$url;
 		$url = str_replace("&amp;", "&", $url);
-		$isFightR=1;
+		$isMainR=1;
 		$isWaitR=0;
 		fputs($flog, "Долго нет подходящей партии на Босса. Идем в другое место...\n");
+		break 2;
 		}		
 		}
 		}
@@ -142,6 +149,12 @@ $url = "http://barbars.ru";
 		sleep(rand(1,3));
 		// Встали в очередь для боя
 		$zapros = get_contents($url, "", $Referer, $userAgent, false);
+		if(!$zapros){ 
+	    //fputs($flog, $dun_step."[EMPTY_ERROR]: URL=$url ||REFERER=$Referer\n");
+		$url = "http://barbars.ru/game/dungeons";
+		$Referer = "http://barbars.ru";
+		$zapros = get_contents($url, "", $Referer, $userAgent, false);
+		}		
 		// Создаем DOM из URL
 		$html = str_get_html($zapros);
 
@@ -270,7 +283,7 @@ $url = "http://barbars.ru";
 		for($u=0;$u<6;$u++){
 		if($urls[5] == "" && $urls[$u] != ""){ 
 		   $url = $urls[$u];
-		   fputs($flog, $fLogDungeon[$u]);	
+		   fputs($flog, 4);	
 		   break 1;
 		} else if(strpos($html->find('h1',0)->innertext, "Пустой грот") !== false || strpos($html->find('h1',0)->innertext, "Пустая пещера") !== false){
 		// Оп-па, босс повержен! (1 вариант)

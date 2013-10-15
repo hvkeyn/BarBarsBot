@@ -115,6 +115,7 @@ fputs($flog, "Входим на Арену!\n");
 
 		$url = "http://barbars.ru/".$url;
 		$url = str_replace("&amp;", "&", $url);
+		fputs($flog, "$cnt - Ждем...\n");
 		$cnt++;
 		sleep(rand(1,3));	
 		}
@@ -128,6 +129,11 @@ fputs($flog, "Входим на Арену!\n");
 		$isWaitR=1;
 		fputs($flog, "Бой на Арене начался!\n");
 		break 1;
+		}
+		// ЭКСТРЕНЫЙ ВЫХОД по stop
+		if(file_exists("stop.txt")){ 
+	    fputs($flog, "Аварийное завершение работы! Локация: Пещеры и Драконы [Выполнение команды КЛАНА прервано]\n");
+		Die();
 		}
 		} else {
 		if(strpos($dmenu->innertext, "Покинуть очередь") !== false){
@@ -148,7 +154,7 @@ fputs($flog, "Входим на Арену!\n");
 		$isWaitR=0;
 		$isMainR=1;
 		fputs($flog, "Долго нет подходящих противников для Арены. Уходим...\n");
-		break 5;
+		break 2;
 		}		
 		}
 		}
@@ -312,7 +318,7 @@ fputs($flog, "Входим на Арену!\n");
 
 		$DeadTrue = 0; // Признак смерти		
 		$ArenaCikl++;
-		sleep(rand(5,12));	
+		sleep(rand(1,5));	
 // C - Антикапча. Проверяем и вводим если нашли.
 list($Referer, ) = anticapcha($Referer,$userAgent,$flog,$gkey,$capcha_server);
 sleep(rand(2,10));			

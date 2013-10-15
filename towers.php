@@ -6,6 +6,7 @@ include_once("lib.php"); // библиотека функций
 include_once("simple_html_dom.php"); // регулярки
 // Игровые библиотеки скрипта
 include_once("rack.php"); // Работа с рюкзаком
+include_once("capcha.php"); // Антикапча
 
 // Для лога - процесс боя
 $fLogStr = array(
@@ -595,7 +596,10 @@ if($step_towers >= $step_this) $EXIT_t = 1;
 		}
 
 $step_towers++;
-sleep(rand(2,6));
+sleep(rand(1,5));
+// C - Антикапча. Проверяем и вводим если нашли. 
+list($Referer, ) = anticapcha($Referer,$userAgent,$flog,$gkey,$capcha_server);
+sleep(rand(2,10));	
 }
 
 		// очищаем буффер

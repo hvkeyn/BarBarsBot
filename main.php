@@ -23,6 +23,7 @@ include_once("dungeons.php"); // Драконы и пещеры
 include_once("arena.php"); // Арена
 include_once("survival.php"); // Выживание
 include_once("capcha.php"); // Антикапча
+include_once("commands.php"); // Команды управления ботом(клан)
 
 $html = new simple_html_dom(); // создаем объект
 
@@ -30,6 +31,7 @@ $html = new simple_html_dom(); // создаем объект
 $all_step = 0;
 $EXIT = 0;
 $ustal = 0; // Усталость
+$MainClanCommand = -1; // Клановой команды нет
 
 // Логируем все действия
 $flog = fopen('log.txt', 'w');
@@ -85,6 +87,21 @@ while($all_step < $step_main && $EXIT == 0)
 list($Referer, $ustal) = anticapcha($Referer,$userAgent,$flog,$gkey,$capcha_server);
 sleep(rand(2,10));	
 
+// ClC - проверка наличия команды от клана. Если есть - срочно идем на бой с Клан Боссами
+list($Referer, $MainClanCommand) = FindClanCommand($Referer,$userAgent,$flog);
+sleep(rand(1,2));
+if($MainClanCommand != -1){
+// Убираем старое объявление с выполняющейся командой...
+$Referer = hideAd($Referer,$userAgent,$flog);
+
+$Referer = Commands($MainClanCommand,$UseClansBottle,$Referer,$userAgent,$flog);
+sleep(rand(2,10));
+
+// C - Антикапча. Проверяем и вводим если нашли. Также получаем параметр "усталость"
+list($Referer, $ustal) = anticapcha($Referer,$userAgent,$flog,$gkey,$capcha_server);
+sleep(rand(2,10));	
+}
+
 // Данные главной страницы
 $url = "http://barbars.ru";
 $zapros = get_contents($url, "", $Referer, $userAgent, false);
@@ -103,8 +120,23 @@ sleep(rand(2,10));
 EraseMemory($html);
 
 // C - Антикапча. Проверяем и вводим если нашли. Также получаем параметр "усталость"
-//list($Referer, $ustal) = anticapcha($Referer,$userAgent,$flog,$gkey,$capcha_server);
-//sleep(rand(2,10));	
+list($Referer, $ustal) = anticapcha($Referer,$userAgent,$flog,$gkey,$capcha_server);
+sleep(rand(2,10));	
+
+// ClC - проверка наличия команды от клана. Если есть - срочно идем на бой с Клан Боссами
+list($Referer, $MainClanCommand) = FindClanCommand($Referer,$userAgent,$flog);
+sleep(rand(1,2));
+if($MainClanCommand != -1){
+// Убираем старое объявление с выполняющейся командой...
+$Referer = hideAd($Referer,$userAgent,$flog);
+
+$Referer = Commands($MainClanCommand,$UseClansBottle,$Referer,$userAgent,$flog);
+sleep(rand(2,10));
+
+// C - Антикапча. Проверяем и вводим если нашли. Также получаем параметр "усталость"
+list($Referer, $ustal) = anticapcha($Referer,$userAgent,$flog,$gkey,$capcha_server);
+sleep(rand(2,10));	
+}
 
 if($pUstal == 0) $ustal = 0; // Игнорируем проверку усталости если в конфиге 0
 if($ustal == 0){
@@ -116,6 +148,21 @@ sleep(rand(2,10));
 // C - Антикапча. Проверяем и вводим если нашли.
 list($Referer, $ustal) = anticapcha($Referer,$userAgent,$flog,$gkey,$capcha_server);
 sleep(rand(2,10));	
+
+// ClC - проверка наличия команды от клана. Если есть - срочно идем на бой с Клан Боссами
+list($Referer, $MainClanCommand) = FindClanCommand($Referer,$userAgent,$flog);
+sleep(rand(1,2));
+if($MainClanCommand != -1){
+// Убираем старое объявление с выполняющейся командой...
+$Referer = hideAd($Referer,$userAgent,$flog);
+
+$Referer = Commands($MainClanCommand,$UseClansBottle,$Referer,$userAgent,$flog);
+sleep(rand(2,10));
+
+// C - Антикапча. Проверяем и вводим если нашли.
+list($Referer, $ustal) = anticapcha($Referer,$userAgent,$flog,$gkey,$capcha_server);
+sleep(rand(2,5));	
+}
 
 // Данные главной страницы
 $url = "http://barbars.ru";
@@ -137,9 +184,21 @@ EraseMemory($html);
 // G - Проверяем подарок в колодце удачи
 $Referer = wellGift($Referer,$userAgent,$flog);
 sleep(rand(2,10));
+
+// ClC - проверка наличия команды от клана. Если есть - срочно идем на бой с Клан Боссами
+list($Referer, $MainClanCommand) = FindClanCommand($Referer,$userAgent,$flog);
+sleep(rand(1,2));
+if($MainClanCommand != -1){
+// Убираем старое объявление с выполняющейся командой...
+$Referer = hideAd($Referer,$userAgent,$flog);
+
+$Referer = Commands($MainClanCommand,$UseClansBottle,$Referer,$userAgent,$flog);
+sleep(rand(2,10));
+
 // C - Антикапча. Проверяем и вводим если нашли.
 list($Referer, $ustal) = anticapcha($Referer,$userAgent,$flog,$gkey,$capcha_server);
 sleep(rand(2,10));	
+}
 
 // Данные главной страницы
 $url = "http://barbars.ru";

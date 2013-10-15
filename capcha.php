@@ -27,7 +27,7 @@ $url = "http://barbars.ru/user";
 		$url = "http://barbars.ru/".$muser->href;	
 		}
 		// Ищем инф-цию по усталости
-		if(strpos($muser->innertext, "Усталость") !== false){
+		if(strpos($muser->innertext, "усталость") !== false){
 		$ustal = 1;
 		}
 		}
